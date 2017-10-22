@@ -140,6 +140,8 @@ class WolfLord(object):
     def find_by_ip(self, ip):
         pass
 
+    def find_by_country(self, country):
+
     def requests_with_urls(self):
         # returns a list of all requests that appear to have a
         # URL within them
