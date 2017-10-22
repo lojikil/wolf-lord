@@ -29,7 +29,10 @@ class GeoIPSet(object):
             if data is not None:
                 tmp['country'] = data.country
                 tmp['timezone'] = data.timezone
-                tmp['location'] = ','.join([str(x) for x in data.location])
+                if data.location is not None:
+                    tmp['location'] = ','.join([str(x) for x in data.location])
+                else:
+                    tmp['location'] = '0, 0'
 
             self.ips[key] = tmp
 
@@ -51,7 +54,7 @@ class GeoIPSet(object):
         res = {}
 
         for ip in self.ips.keys():
-            tz = self.ips[ip]['timezone']
+            tz = self.ips[ip].get('timezone', 'No TZ Data')
 
             if tz not in res:
                 res[tz] = [ip]
@@ -64,7 +67,7 @@ class GeoIPSet(object):
         res = {}
 
         for ip in self.ips.keys():
-            country = self.ips[ip]['country']
+            country = self.ips[ip].get('country', 'No Country Data')
 
             if country not in res:
                 res[country] = [ip]

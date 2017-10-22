@@ -12,14 +12,16 @@ class WolfLord(object):
 
     # log data is a linear list of all
     # events encountered in the logs
-    # __slots__ = ['known_ips', 'log_data', 'lp', 'fmt', 'paths',
-    #             'statuses']
+    __slots__ = ['known_ips', 'log_data', 'lp', 'fmt', 'paths',
+                 'statuses', 'refs', 'full_urls']
 
     def __init__(self, formatspec=None):
         self.known_ips = GeoIPSet()
         self.log_data = []
         self.paths = {}
-        self.statues = {}
+        self.refs = {}
+        self.full_urls = {}
+        self.statuses = {}
 
         if formatspec is None:
             self.fmt = '%h %l %u %t %r %s %b "%{Referer}i" "%{User-Agent}i"'
@@ -27,6 +29,24 @@ class WolfLord(object):
             self.fmt = formatspec
 
         self.lp = apache_log_parser.make_parser(self.fmt)
+
+    def _add_path(self, path):
+        if path in self.paths:
+            self.paths[path] += 1
+        else:
+            self.paths[path] = 1
+
+    def _add_ref(self, ref):
+        if ref in self.refs:
+            self.refs[ref] += 1
+        else:
+            self.refs[ref] = 1
+
+    def _add_full_url(self, full_url):
+        if full_url in self.full_urls:
+            self.full_urls[full_url] += 1
+        else:
+            self.full_urls[full_url] = 1
 
     def add_file(self, logfile):
         with file(logfile) as fh:
@@ -38,7 +58,11 @@ class WolfLord(object):
                 # interested in.
                 request_line = data['request_first_line'].split(' ')
                 method = request_line[0] # HTTP Method/Verb
-                fullurl = request_line[1] # URL including query string
+                if len(request_line) > 1:
+                    fullurl = request_line[1] # URL including query string
+                else:
+                    fullurl = ""
+
                 urlparts = fullurl.split('?', 1) # and now parsed...
                 path = urlparts[0] # Path section of the URL
                 # potential query string
@@ -46,10 +70,24 @@ class WolfLord(object):
                     query_string = urlparts[1]
                 else:
                     query_string = ""
-                httpver = request_line[2] # HTTP/x.y specifier
+
+                # potential version specifier 
+                if len(urlparts) > 2:
+                    httpver = request_line[2] # HTTP/x.y specifier
+                else:
+                    httpver = "HTTP/unknown"
 
                 # add the remote IP to the set of known hosts
                 self.known_ips.add(data['remote_host'])
+
+                # and add the path to our set of known paths
+                self._add_path(path)
+
+                # and add the referer to the list of known refs
+                self._add_ref(data['request_header_referer'])
+
+                # and finally add the full URL to the known list
+                self._add_full_url(fullurl)
 
                 res = [data['remote_host'],
                        data['request_header_referer'],
@@ -72,17 +110,35 @@ class WolfLord(object):
     def remotes_by_country(self):
         return self.known_ips.ips_by_country()
 
-    def referers(self):
-        return self.referers.keys()
+    def unique_remotes(self):
+        return len(self.known_ips)
 
-    def paths(self):
-        return self.paths.keys()
+    def total_remotes(self):
+        return self.known_ips.total_ips()
+
+    def referers(self):
+        return self.refs
+
+    def request_paths(self):
+        return self.paths
+
+    def request_urls(self):
+        return self.full_urls
 
     def referers_with_count(self):
         return self.referers.items()
 
     def paths_with_count(self):
         return self.paths.items()
+
+    def find_by_path(self, path):
+        pass
+
+    def find_by_path_fuzzy(self, path):
+        pass
+
+    def find_by_ip(self, ip):
+        pass
 
     def requests_with_urls(self):
         # returns a list of all requests that appear to have a
@@ -116,8 +172,20 @@ if __name__ == "__main__":
         for arg in sys.argv[1:]:
             lord.add_file(arg)
 
-        countries = lord.remotes_by_country()
+        countries = sorted(lord.remotes_by_country().items(),
+                           key=lambda x: len(x[1]), reverse = True)[0:11]
+        print "Top 10 Country Statistics:"
+        for country in countries:
+            print "{0}: {1}".format(country[0], len(country[1]))
 
-        print "Country Statistics:"
-        for country in countries.keys():
-            print "{0}: {1}".format(country, len(countries[country]))
+        print "\nUnique hosts:", lord.unique_remotes()
+        print "Total hosts:", lord.total_remotes()
+
+        paths = sorted(lord.request_paths().items(),
+                       key=lambda x: x[1], reverse=True)[0:11]
+
+        print "\nTop path requests:"
+
+        for path in paths:
+            print path[0], path[1]
+
