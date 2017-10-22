@@ -1,7 +1,7 @@
 # wolf-lord a simple tool for parsing &
 # querying web logs. It's meant to do simple
 # things like compare raw & unique clients,
-# aggregate requests by country, search for 
+# aggregate requests by country, search for
 # anomalous traffic, &c.
 
 from geoipset import GeoIPSet
@@ -54,26 +54,26 @@ class WolfLord(object):
                 # parse the log file line based on self.fmt
                 data = self.lp(line)
 
-                # split out some of the request data we may be 
+                # split out some of the request data we may be
                 # interested in.
                 request_line = data['request_first_line'].split(' ')
-                method = request_line[0] # HTTP Method/Verb
+                method = request_line[0]  # HTTP Method/Verb
                 if len(request_line) > 1:
-                    fullurl = request_line[1] # URL including query string
+                    fullurl = request_line[1]  # URL including query string
                 else:
                     fullurl = ""
 
-                urlparts = fullurl.split('?', 1) # and now parsed...
-                path = urlparts[0] # Path section of the URL
+                urlparts = fullurl.split('?', 1)  # and now parsed...
+                path = urlparts[0]  # Path section of the URL
                 # potential query string
                 if len(urlparts) > 1:
                     query_string = urlparts[1]
                 else:
                     query_string = ""
 
-                # potential version specifier 
+                # potential version specifier
                 if len(urlparts) > 2:
-                    httpver = request_line[2] # HTTP/x.y specifier
+                    httpver = request_line[2]  # HTTP/x.y specifier
                 else:
                     httpver = "HTTP/unknown"
 
@@ -141,6 +141,7 @@ class WolfLord(object):
         pass
 
     def find_by_country(self, country):
+        pass
 
     def requests_with_urls(self):
         # returns a list of all requests that appear to have a
@@ -165,6 +166,7 @@ class WolfLord(object):
         # be logged like that.
         pass
 
+
 if __name__ == "__main__":
     lord = WolfLord()
 
@@ -175,7 +177,7 @@ if __name__ == "__main__":
             lord.add_file(arg)
 
         countries = sorted(lord.remotes_by_country().items(),
-                           key=lambda x: len(x[1]), reverse = True)[0:11]
+                           key=lambda x: len(x[1]), reverse=True)[0:11]
         print "Top 10 Country Statistics:"
         for country in countries:
             print "{0}: {1}".format(country[0], len(country[1]))
@@ -190,4 +192,3 @@ if __name__ == "__main__":
 
         for path in paths:
             print path[0], path[1]
-

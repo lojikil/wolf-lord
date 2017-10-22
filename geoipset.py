@@ -2,13 +2,14 @@
 # stores GeoIP data about an IP address
 # Basically, this implements a counting
 # set, but also stores additional
-# information as retrieved from the 
-# MaxMind GeoIP database 
+# information as retrieved from the
+# MaxMind GeoIP database
 # probably useful outside of wolf-lord,
-# but for now only exists within this 
+# but for now only exists within this
 # project.
 
 from geoip import geolite2
+
 
 class GeoIPSet(object):
 
