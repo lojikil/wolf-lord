@@ -12,7 +12,6 @@ from geoip import geolite2
 
 
 class GeoIPSet(object):
-
     __slots__ = ['ips']
 
     def __init__(self):
@@ -34,6 +33,10 @@ class GeoIPSet(object):
                     tmp['location'] = ','.join([str(x) for x in data.location])
                 else:
                     tmp['location'] = '0, 0'
+            else:
+                tmp['country'] = "No Country Data"
+                tmp['timezone'] = "No TZ Data"
+                tmp['location'] = '0, 0'
 
             self.ips[key] = tmp
 
@@ -41,7 +44,17 @@ class GeoIPSet(object):
         if key in self.ips:
             self.ips[key]['count'] = count
 
+    def keys(self):
+        return self.ips.keys()
+
+    def iterkeys(self):
+        return self.ips.iterkeys()
+
+    def __iter__(self):
+        return self.ips.iter()
+
     def __getitem__(self, key):
+        print "here:", key
         return self.ips.get(key)
 
     def __len__(self):
@@ -50,6 +63,9 @@ class GeoIPSet(object):
         # if you need total number of times
         # the IP was seen in a given log
         return len(self.ips.keys())
+
+    def __contains__(self, ip):
+        return ip in self.ips
 
     def ips_by_timezone(self):
         res = {}

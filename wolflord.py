@@ -72,7 +72,7 @@ class WolfLord(object):
                     query_string = ""
 
                 # potential version specifier
-                if len(urlparts) > 2:
+                if len(request_line) > 2:
                     httpver = request_line[2]  # HTTP/x.y specifier
                 else:
                     httpver = "HTTP/unknown"
@@ -132,16 +132,27 @@ class WolfLord(object):
         return self.paths.items()
 
     def find_by_path(self, path):
-        pass
+
+        if path not in self.paths:
+            return []
+
+        return [x for x in self.log_data if x[7] == path]
 
     def find_by_path_fuzzy(self, path):
         pass
 
     def find_by_ip(self, ip):
-        pass
+
+        if ip not in self.known_ips:
+            return []
+
+        return [x for x in self.log_data if x[0] == ip]
 
     def find_by_country(self, country):
-        pass
+        res = []
+        # NOTE: this line is evil looking. Pure. Evil.
+        ips = set([x for x in self.known_ips.keys() if self.known_ips[x]['country'] == country])
+        return [x for x in self.log_data if x[0] in ips]
 
     def requests_with_urls(self):
         # returns a list of all requests that appear to have a
