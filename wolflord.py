@@ -6,6 +6,7 @@
 
 from geoipset import GeoIPSet
 import apache_log_parser
+import re
 
 
 class WolfLord(object):
@@ -98,7 +99,8 @@ class WolfLord(object):
                        method,
                        path,
                        query_string,
-                       httpver]
+                       httpver,
+                       data['request_header_user_agent']]
                 self.log_data.append(res)
 
     def add_line(self, logline):
@@ -131,6 +133,11 @@ class WolfLord(object):
     def paths_with_count(self):
         return self.paths.items()
 
+    # Honestly, reading all of these `find_by...` methods
+    # makes me think that what I really want is some sort
+    # of Datalog-like filtering langauge, or Sieve, or 
+    # something...
+
     def find_by_path(self, path):
 
         if path not in self.paths:
@@ -141,6 +148,20 @@ class WolfLord(object):
     def find_by_path_fuzzy(self, path):
         pass
 
+    def find_by_path_prefix(self, pathprefix, exclude=None, is_regex=False):
+        pass
+
+    def find_by_statuscode(self, status, not_flag=False):
+        """ Find log entries by HTTP status code.
+
+            Arguments:
+            status: the HTTP status code to filter by/for
+
+            keyword arguments:
+            not_flag: signal if we should check if the value is *not* equal
+        """
+        pass
+
     def find_by_ip(self, ip):
 
         if ip not in self.known_ips:
@@ -149,7 +170,6 @@ class WolfLord(object):
         return [x for x in self.log_data if x[0] == ip]
 
     def find_by_country(self, country):
-        res = []
         # NOTE: this line is evil looking. Pure. Evil.
         ips = set([x for x in self.known_ips.keys() if self.known_ips[x]['country'] == country])
         return [x for x in self.log_data if x[0] in ips]
