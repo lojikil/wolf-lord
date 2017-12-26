@@ -9,6 +9,8 @@
 # project.
 
 from geoip import geolite2
+import sys
+import csv
 
 
 class GeoIPSet(object):
@@ -40,6 +42,10 @@ class GeoIPSet(object):
 
             self.ips[key] = tmp
 
+    def add_all(self, keys):
+        for key in keys:
+            self.add(key)
+
     def __setitem__(self, key, count):
         if key in self.ips:
             self.ips[key]['count'] = count
@@ -54,7 +60,6 @@ class GeoIPSet(object):
         return self.ips.iter()
 
     def __getitem__(self, key):
-        print "here:", key
         return self.ips.get(key)
 
     def __len__(self):
@@ -100,3 +105,24 @@ class GeoIPSet(object):
             res += self.ips[ip]['count']
 
         return res
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print "usage: geoipset.py [file with newline-separated list of IPs]"
+        sys.exit(1)
+
+    ds = GeoIPSet()
+    with file(sys.argv[1]) as fh:
+        for line in fh:
+            ds.add(line.strip())
+
+    out = csv.writer(sys.stdout, delimiter='\t')
+
+    for ip in ds.ips.keys():
+        val = ds.ips[ip]
+        out.writerow([ip,
+                      val['count'],
+                      val['country'],
+                      val['location'],
+                      val['timezone']])
