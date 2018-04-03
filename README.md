@@ -79,3 +79,4 @@ it can be called from the command line to return a TSV file thusly:
 
 - return entries by most/least common referer/client-IP/path
 - finish the URL/XSS/SQLi/whatever stubs
+- referer intelligence (IP lookup, GeoIP, &c.)

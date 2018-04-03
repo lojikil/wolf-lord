@@ -167,7 +167,7 @@ class WolfLord(object):
         """
         return [x for x in self.log_data if fuzzy_path in x[7]]
 
-    def _prefix_filter(self, item, prefix):
+    def _filter(self, item, prefix, contains=False):
         """ Helper function to filter path prefixes.
 
             Arguments:
@@ -176,6 +176,8 @@ class WolfLord(object):
         """
         if isinstance(prefix, re._pattern_type):
             return prefix.search(item)
+        elif contains:
+            return prefix in item
         else:
             return item.startswith(prefix)
 
@@ -189,12 +191,32 @@ class WolfLord(object):
             exclude: the items to be excluded (None | string | compiled regex)
 
         """
-        ret = [x for x in self.log_data if self._prefix_filter(x[7], pathprefix)]
+        ret = [x for x in self.log_data if self._filter(x[7], pathprefix)]
 
         if exclude is not None:
-            return filter(lambda x: self._prefix_filter(x[7], exclude), ret)
+            return filter(lambda x: self._filter(x[7], exclude), ret)
 
         return ret
+
+    def find_by_referer(self, referer, not_flag=False):
+        """ Find log entries with a specific referer.
+
+            Arguments:
+            referer: the (string | compiled regex) to check
+
+            Keyword Arguments:
+            not_flag: a Boolean to return those that do *not* match referer
+
+        """
+
+        if not_flag:
+            return [x
+                    for x in self.log_data
+                    if not self._filter(x[1], referer, contains=True)]
+        else:
+            return [x
+                    for x in self.log_data
+                    if self._filter(x[1], referer, contains=True)]
 
     def find_by_statuscode(self, status, not_flag=False):
         """ Find log entries by HTTP status code.
