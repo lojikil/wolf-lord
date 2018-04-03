@@ -98,6 +98,11 @@ class GeoIPSet(object):
 
         return res
 
+    def ips_by_count(self):
+        return sorted(self.ips.items(),
+                      key=lambda x: x[1]['count'],
+                      reverse=True)
+
     def total_ips(self):
         res = 0
 

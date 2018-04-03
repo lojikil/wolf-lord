@@ -59,6 +59,10 @@ class WolfLord(object):
                 # interested in.
                 request_line = data['request_first_line'].split(' ')
                 method = request_line[0]  # HTTP Method/Verb
+
+                if method[0] == '"':
+                    method = method[1:]
+
                 if len(request_line) > 1:
                     fullurl = request_line[1]  # URL including query string
                 else:
@@ -90,6 +94,7 @@ class WolfLord(object):
                 # and finally add the full URL to the known list
                 self._add_full_url(fullurl)
 
+                # man this would be so much nicer as a named tuple...
                 res = [data['remote_host'],
                        data['request_header_referer'],
                        data['request_first_line'],
@@ -139,6 +144,13 @@ class WolfLord(object):
     # something...
 
     def find_by_path(self, path):
+        """ A simple path-match check. Returns a list of al log entries
+            where the URL path requested is *exactly* equal to a value.
+
+            Arguments:
+            path: the path to filter on (string)
+
+        """
 
         if path not in self.paths:
             return []
@@ -146,16 +158,43 @@ class WolfLord(object):
         return [x for x in self.log_data if x[7] == path]
 
     def find_by_path_fuzzy(self, fuzzy_path):
-        if path not in self.paths:
-            return []
+        """ A simple 'contains' check for paths. less robust than
+            find_by_path_prefix.
 
+            Arguments:
+            fuzzy_path: the string to filter ala contains check
+
+        """
         return [x for x in self.log_data if fuzzy_path in x[7]]
 
-    def find_by_path_prefix(self, pathprefix, exclude=None, is_regex=False):
-        if path not in self.paths:
-            return []
+    def _prefix_filter(self, item, prefix):
+        """ Helper function to filter path prefixes.
 
-        return [x for x in self.log_data if x[7].startswith(pathprefix)]
+            Arguments:
+            item: the item to be tested
+            prefix: the (string | compiled regex) filter
+        """
+        if isinstance(prefix, re._pattern_type):
+            return prefix.search(item)
+        else:
+            return item.startswith(prefix)
+
+    def find_by_path_prefix(self, pathprefix, exclude=None):
+        """ Find log entries by path prefix, which may be a regex.
+
+            Arguments:
+            pathprefx: the test case to filter by (string | compiled regex)
+
+            Keyword Arguments:
+            exclude: the items to be excluded (None | string | compiled regex)
+
+        """
+        ret = [x for x in self.log_data if self._prefix_filter(x[7], pathprefix)]
+
+        if exclude is not None:
+            return filter(lambda x: self._prefix_filter(x[7], exclude), ret)
+
+        return ret
 
     def find_by_statuscode(self, status, not_flag=False):
         """ Find log entries by HTTP status code.
@@ -166,7 +205,26 @@ class WolfLord(object):
             keyword arguments:
             not_flag: signal if we should check if the value is *not* equal
         """
-        pass
+
+        if not_flag:
+            return [x for x in self.log_data if x[5] != status]
+        else:
+            return [x for x in self.log_data if x[5] == status]
+
+    def find_by_method(self, method, not_flag=False):
+        """ Find log entries by HTTP method.
+
+            Arguments:
+            method: the HTTP method verb to filter by/for
+
+            keyword arguments:
+            not_flag: signal if we should check if the value is *not* equal
+        """
+
+        if not_flag:
+            return [x for x in self.log_data if x[6] != method]
+        else:
+            return [x for x in self.log_data if x[6] == method]
 
     def find_by_ip(self, ip):
 
