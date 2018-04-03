@@ -145,11 +145,17 @@ class WolfLord(object):
 
         return [x for x in self.log_data if x[7] == path]
 
-    def find_by_path_fuzzy(self, path):
-        pass
+    def find_by_path_fuzzy(self, fuzzy_path):
+        if path not in self.paths:
+            return []
+
+        return [x for x in self.log_data if fuzzy_path in x[7]]
 
     def find_by_path_prefix(self, pathprefix, exclude=None, is_regex=False):
-        pass
+        if path not in self.paths:
+            return []
+
+        return [x for x in self.log_data if x[7].startswith(pathprefix)]
 
     def find_by_statuscode(self, status, not_flag=False):
         """ Find log entries by HTTP status code.
