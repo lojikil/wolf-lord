@@ -140,7 +140,7 @@ class WolfLord(object):
 
     # Honestly, reading all of these `find_by...` methods
     # makes me think that what I really want is some sort
-    # of Datalog-like filtering langauge, or Sieve, or 
+    # of Datalog-like filtering langauge, or Sieve, or
     # something...
 
     def find_by_path(self, path):
@@ -257,7 +257,9 @@ class WolfLord(object):
 
     def find_by_country(self, country):
         # NOTE: this line is evil looking. Pure. Evil.
-        ips = set([x for x in self.known_ips.keys() if self.known_ips[x]['country'] == country])
+        ips = set([x
+                   for x in self.known_ips.keys()
+                   if self.known_ips[x]['country'] == country])
         return [x for x in self.log_data if x[0] in ips]
 
     def requests_with_urls(self):
