@@ -52,67 +52,67 @@ class WolfLord(object):
     def add_file(self, logfile):
         with file(logfile) as fh:
             for line in fh:
-                # parse the log file line based on self.fmt
-                data = self.lp(line)
-
-                # split out some of the request data we may be
-                # interested in.
-                request_line = data['request_first_line'].split(' ')
-                method = request_line[0]  # HTTP Method/Verb
-
-                if method[0] == '"':
-                    method = method[1:]
-
-                if len(request_line) > 1:
-                    fullurl = request_line[1]  # URL including query string
-                else:
-                    fullurl = ""
-
-                urlparts = fullurl.split('?', 1)  # and now parsed...
-                path = urlparts[0]  # Path section of the URL
-                # potential query string
-                if len(urlparts) > 1:
-                    query_string = urlparts[1]
-                else:
-                    query_string = ""
-
-                # potential version specifier
-                if len(request_line) > 2:
-                    httpver = request_line[2]  # HTTP/x.y specifier
-                else:
-                    httpver = "HTTP/unknown"
-
-                # add the remote IP to the set of known hosts
-                self.known_ips.add(data['remote_host'])
-
-                # and add the path to our set of known paths
-                self._add_path(path)
-
-                # and add the referer to the list of known refs
-                self._add_ref(data['request_header_referer'])
-
-                # and finally add the full URL to the known list
-                self._add_full_url(fullurl)
-
-                # man this would be so much nicer as a named tuple...
-                res = [data['remote_host'],
-                       data['request_header_referer'],
-                       data['request_first_line'],
-                       data['time_received_tz_isoformat'],
-                       data['response_bytes_clf'],
-                       data['status'],
-                       method,
-                       path,
-                       query_string,
-                       httpver,
-                       data['request_header_user_agent']]
-                self.log_data.append(res)
+                self.add_line(line)
 
     def add_line(self, logline):
         # same process as the above really; probably should have an
         # internal method that does the data ETL and just call that
         # from both add_line and add_file...
-        pass
+        # parse the log file line based on self.fmt
+        data = self.lp(logline)
+
+        # split out some of the request data we may be
+        # interested in.
+        request_line = data['request_first_line'].split(' ')
+        method = request_line[0]  # HTTP Method/Verb
+
+        if method[0] == '"':
+            method = method[1:]
+
+        if len(request_line) > 1:
+            fullurl = request_line[1]  # URL including query string
+        else:
+            fullurl = ""
+
+        urlparts = fullurl.split('?', 1)  # and now parsed...
+        path = urlparts[0]  # Path section of the URL
+        # potential query string
+        if len(urlparts) > 1:
+            query_string = urlparts[1]
+        else:
+            query_string = ""
+
+        # potential version specifier
+        if len(request_line) > 2:
+            httpver = request_line[2]  # HTTP/x.y specifier
+        else:
+            httpver = "HTTP/unknown"
+
+        # add the remote IP to the set of known hosts
+        self.known_ips.add(data['remote_host'])
+
+        # and add the path to our set of known paths
+        self._add_path(path)
+
+        # and add the referer to the list of known refs
+        self._add_ref(data['request_header_referer'])
+
+        # and finally add the full URL to the known list
+        self._add_full_url(fullurl)
+
+        # man this would be so much nicer as a named tuple...
+        res = [data['remote_host'],
+               data['request_header_referer'],
+               data['request_first_line'],
+               data['time_received_tz_isoformat'],
+               data['response_bytes_clf'],
+               data['status'],
+               method,
+               path,
+               query_string,
+               httpver,
+               data['request_header_user_agent']]
+        self.log_data.append(res)
 
     def remotes_by_country(self):
         return self.known_ips.ips_by_country()
@@ -297,17 +297,24 @@ if __name__ == "__main__":
 
         countries = sorted(lord.remotes_by_country().items(),
                            key=lambda x: len(x[1]), reverse=True)[0:11]
-        print "Top 10 Country Statistics:"
+        print "# Top 10 Country Statistics:\n"
         for country in countries:
-            print "{0}: {1}".format(country[0], len(country[1]))
+            print "- {0}: {1}".format(country[0], len(country[1]))
 
-        print "\nUnique hosts:", lord.unique_remotes()
+        print "\n# Host statistics: \n\nUnique hosts:", lord.unique_remotes()
         print "Total hosts:", lord.total_remotes()
 
         paths = sorted(lord.request_paths().items(),
                        key=lambda x: x[1], reverse=True)[0:11]
+        bpaths = sorted(lord.request_paths().items(),
+                        key=lambda x: x[1])[0:11]
 
-        print "\nTop path requests:"
+        print "\n# Path Statistics:\n\nTop Paths:\n"
 
         for path in paths:
-            print path[0], path[1]
+            print "-", path[0], path[1]
+
+        print "\nLeast Frequent Paths:\n"
+
+        for path in bpaths:
+            print "-", path[0], path[1]
