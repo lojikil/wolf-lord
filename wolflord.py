@@ -285,6 +285,35 @@ class WolfLord(object):
         # be logged like that.
         pass
 
+    def requests_with_commandi(self):
+        # return all requests with command injection
+        pass
+
+    def request_with_backups(self):
+        # return all requests that appear to be requesting
+        # a backup file
+        pass
+
+    def requests_with_repo(self):
+        # return all requests that appear to be requesting
+        # a repository file (aka .git)
+        pass
+
+    def requests_with_admin(self):
+        # return all requests that appear to be requesting
+        # something in the admin space, like wp-admin.
+        # probably should have a filter for those requests
+        # that are/are not successful.
+        pass
+
+    def requests_robot(self):
+        # return all requests that have 'robot' in the UserAgent
+        pass
+
+    def requests_robotstxt(self):
+        # return all requests that fetch the robots.txt file
+        pass
+
 
 if __name__ == "__main__":
     lord = WolfLord()
