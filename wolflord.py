@@ -14,7 +14,7 @@ class WolfLord(object):
     # log data is a linear list of all
     # events encountered in the logs
     __slots__ = ['known_ips', 'log_data', 'lp', 'fmt', 'paths',
-                 'statuses', 'refs', 'full_urls']
+                 'statuses', 'refs', 'full_urls', '_backup_re']
 
     def __init__(self, formatspec=None):
         self.known_ips = GeoIPSet()
@@ -23,6 +23,7 @@ class WolfLord(object):
         self.refs = {}
         self.full_urls = {}
         self.statuses = {}
+        self._backup_re = re.compile('ba(c)?k(up)?', re.I)
 
         if formatspec is None:
             self.fmt = '%h %l %u %t %r %s %b "%{Referer}i" "%{User-Agent}i"'
@@ -265,7 +266,14 @@ class WolfLord(object):
     def requests_with_urls(self):
         # returns a list of all requests that appear to have a
         # URL within them
-        pass
+        res = []
+        for item in self.log_data:
+            if '://' in item[7] or '://' in item[8]:
+                res.append(item)
+            elif ('%3A%2F%2F' in item[7].toupper()
+                  or '%3A%2F%2F' in item[8].toupper()):
+                res.append(item)
+        return res
 
     def requests_with_sqli(self):
         # returns a list of all requests that appear to have SQLi
@@ -292,7 +300,11 @@ class WolfLord(object):
     def request_with_backups(self):
         # return all requests that appear to be requesting
         # a backup file
-        pass
+        res = []
+        for item in self.log_data:
+            if self._backup_re.search(item[7]):
+                res.append(item)
+        return res
 
     def requests_with_repo(self):
         # return all requests that appear to be requesting
