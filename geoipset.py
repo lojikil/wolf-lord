@@ -124,8 +124,7 @@ if __name__ == "__main__":
 
     out = csv.writer(sys.stdout, delimiter='\t')
 
-    for ip in ds.ips.keys():
-        val = ds.ips[ip]
+    for ip, val in ds.ips.iteritems():
         out.writerow([ip,
                       val['count'],
                       val['country'],
